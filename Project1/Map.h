@@ -1,373 +1,78 @@
+#ifndef Map_H
+#define Map_H
+
 #include <iostream>
+#include <string>
 
-#include "Map.h"
+using keyT   = std::string;
+using ValueT = double;
 
 
-Map::Map() : root(nullptr)
-{}
-
-Map::Map(const Map& rhs) : root(nullptr)
+class Map
 {
-    keyT   key;
-    ValueT val;
-
-    
-    for (int i = 0 ; i < rhs.size() ; i++)
-    {
-        rhs.get(i, key, val);
-        insert(key, val);
-    }
-}
-
-Map::~Map()
-{
-    destroySubTree(root);
-}
-
-const Map& Map::operator=(const Map& rhs)
-{
-    
-    destroySubTree(root);
-
-    keyT  key;
-    ValueT val;
-
-    
-    for (int i = 0 ; i < rhs.size() ; i++)
-    {
-        rhs.get(i, key, val);
-        insert(key, val);
-    }
-
-    return *this;
-}
-
-
-
-int Map::size() const
-{
-    return nodeC(root);   
-}
-
-bool Map::empty() const
-{
-    
-    return root == nullptr ? true : false;
-}
-
-
-bool Map::update(const keyT& key, const ValueT& value)
-{
-    Node* nodePtr = root;
-
-   
-    while (nodePtr != nullptr)
-    {
-      
-        if (nodePtr->key == key)
+    private:
+        struct Node
         {
-            nodePtr->val = value;
-            return true;
-        }
-        else if (key < nodePtr->key)
-        {
-            nodePtr = nodePtr->left;
-        }
-        else
-        {
-            nodePtr = nodePtr->right;
-        }
-    }
+            keyT   key;
+            ValueT val;
+            Node*     left;
+            Node*     right;
+        };
 
-   
-    return false;
-}
+        Node* root;
 
-bool Map::insert(const keyT& key, const ValueT& value)
-{
-   
-    Node* newN = new Node;
-    newN->left  = nullptr;
-    newN->right = nullptr;
-    newN->key   = key;
-    newN->val   = value;
-
-    bool success = true;
-
-    insertN(root, newN, success);
-
-    
-    if (!success)
-        delete newN;
-
-    return success;
-}
-
-
-bool Map::insertOrU(const keyT& key, const ValueT& value)
-{
-    if (contains(key))
-        return update(key, value);
-    else
-        return insert(key, value);
-}
-
-
-bool Map::contains(const keyT& key) const
-{
-    Node* nodePtr = root;
-
-    
-    while (nodePtr != nullptr)
-    {
-        
-        if (key == nodePtr->key)
-            return true;
-        else if (key < nodePtr->key)
-            nodePtr = nodePtr->left;
-        else
-            nodePtr = nodePtr->right;
-    }
-   
-    return false;
-}
-
-bool Map::erase(const keyT& key)
-{
-    if (contains(key))
-    {
-        deleteN(key, root);
-        return true;
-    }
-    
-    return false;
-}
-
-
-bool Map::get(const keyT& key, ValueT& value) const
-{
-    Node* nodePtr = root;
-
-    
-    while (nodePtr != nullptr)
-    {
+        void destroySubTree(Node*& nodePtr);
        
-        if (nodePtr->key == key)
-        {
-            value = nodePtr->val;
-            return true;
-        }
-        else if (key < nodePtr->key)
-        {
-            nodePtr = nodePtr->left;
-        }
-        else
-        {
-            nodePtr = nodePtr->right;
-        }
-    }
 
-   
-    return false;
-}
+        int nodeC(Node* nodePtr) const;
+       
+        void scanN(Node* nodePtr, keyT keys[], ValueT vals[], int& desI, int& currI) const;
 
-bool Map::get(int i, keyT& key, ValueT& value) const
-{
-    
-    if (!((0 <= i) && (i < size())))
-        return false;
+        void insertN(Node*& nodePtr, Node*& newNode, bool& success);
+       
+       void makeD(Node*& nodePtr);
 
-    int currI = 0;
-
-    
-   scanN(root, keys, vals, desI, currI);
-
-    return true;
-}
-
-void Map::swap(Map& other)
-{
-    Map temp;
-    temp = other;
-    other = *this;
-    *this = temp;
-}
-
-
-void Map::destroySubTree(Node*& nodePtr)
-{
-    if (nodePtr != nullptr)
-    {
-        destroySubTree(nodePtr->left);
-        destroySubTree(nodePtr->right);
+        void deleteN(const keyT& key, Node*& nodePtr);
         
-        delete nodePtr;
-        nodePtr = nullptr;
-    }
-}
-
-int Map::nodeC(Node* nodePtr) const
-{
-    if (nodePtr == nullptr)
-        return 0;
-
-    int leftCount  = nodeC(nodePtr->left);
-    int rightCount = nodeC(nodePtr->right);
-
-    return (1 + leftCount + rightCount);
-}
-
-void Map::insertN(Node*& nodePtr, Node*& newN, bool& success)
-{
-    if (nodePtr == nullptr)
-        nodePtr = newN;
-    else if (newN->key < nodePtr->key)
-        insertN(nodePtr->left, newN, success);
-    else if (newN->key > nodePtr->key)
-        insertN(nodePtr->right, newN, success);
-    else
-        success = false;
-}
-
-
-
-void Map::makeD(Node*& nodePtr)
-{
-    Node* temp = nullptr;
-
-    if (nodePtr == nullptr)
-        return;
     
-    else if (nodePtr->right == nullptr)
-    {
-        temp = nodePtr;
-        nodePtr = nodePtr->left;
-        delete temp;
-    }
-    
-    else if (nodePtr->left == nullptr)
-    {
-        temp = nodePtr;
-        nodePtr = nodePtr->right;
-        delete temp;
-    }
-    else
-    {
-        temp = nodePtr->right;
 
        
-        while (temp->left)
-        {
-            temp = temp->left;
-        }
-
-       
-        temp->left = nodePtr->left;
-        temp = nodePtr;
-       
-        nodePtr = nodePtr->right;
-       
-        delete temp;
-    }
-}
-
-void Map::deleteN(const keyT& key, Node*& nodePtr)
-{
    
-    if (nodePtr == nullptr)
-        return;
-    else if (key < nodePtr->key)
-        deleteN(key, nodePtr->left);
-    else if (key > nodePtr->key)
-        deleteN(key, nodePtr->right);
-    else
+
+    public:
+        Map();                                  
+
+        Map(const Map& rhs);                    
+
+        ~Map();                                 
+
+        const Map& operator=(const Map& rhs);   
+
+        bool empty() const;                     
+
+        int size() const;                       
+
+        bool insert(const keyT& key, const ValueT& value);
         
-        makeD(nodePtr);
-}
-
-void Map::scanN(Node* nodePtr, keyT keys[], ValueT vals[], int& desI, int& currI) const
-{
-    if (nodePtr != nullptr)
-    {
-        scanN(nodePtr->left, keys, vals, currI);
+        bool update(const keyT& key, const ValueT& value);
         
-        if(desI == currI)
-        {
-        keys[currI] = nodePtr->key;
-        vals[currI] = nodePtr->val;
-        }
+        bool insertOrU(const keyT& key, const ValueT& value);
         
-        currI++;
-        scanN(nodePtr->right, keys, vals, currI);
-    }
-}
-
-
-bool combine(const Map& m1, const Map& m2, Map& result)
-{
-    
-    Map res;
-
-    
-    bool status = true;
-    
-   
-    res = m1;
-
-    
-    for (int i = 0 ; i < m2.size() ; i++)
-    {
-        keyT   key;
-        ValueT val;
-
-        m2.get(i, key, val);
-
+        bool erase(const keyT& key);
         
-        if (res.contains(key))
-        {
-            ValueT val2;
-
-            res.get(key, val2);
-            
-            
-            if (val != val2)
-            {
-                status = false;
-                res.erase(key);
-                continue;
-            }
-        }
-
+        bool contains(const keyT& key) const;
         
-        res.insert(key, val);
-    }
-
-    
-    result = res;
-
-    return status;
-}
-
-void subtract(const Map& m1, const Map& m2, Map& result)
-{
-    
-    Map res;
-
-    
-    res = m1;
-
-    
-    for (int i = 0 ; i < m2.size() ; i++)
-    {
-        keyT key;
-        ValueT val;
-
-        m2.get(i, key, val);
-
+        bool get(const keyT& key, ValueT& value) const;
         
-        res.erase(key);
-    }
 
-    
-    result = res;
-}
+        bool get(int i, keyT& key, ValueT& value) const;
+        
+        void swap(Map& other);
+       
+
+};
+
+bool combine(const Map& m1, const Map& m2, Map& result);
+void subtract(const Map& m1, const Map& m2, Map& result);
+
+#endif
