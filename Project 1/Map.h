@@ -26,7 +26,7 @@ class Map
 
         int nodeC(Node* nodePtr) const;
        
-        void scanN(Node* nodePtr, keyT keys[], ValueT vals[], int& desI, int& currI) const;
+        void scanN(Node* nodePtr, keyT key, ValueT val, int& desI, int& currI) const;
 
         void insertN(Node*& nodePtr, Node*& newNode, bool& success);
        
