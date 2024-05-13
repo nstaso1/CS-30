@@ -298,7 +298,7 @@ void Map::scanN(Node* nodePtr, keyT& key, ValueT& val, int& desI, int& currI) co
         }
         
         currI++;
-        scanN(nodePtr->right, keys, vals, desI, currI);
+        scanN(nodePtr->right, key, val, desI, currI);
     }
 }
 
